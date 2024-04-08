@@ -1,6 +1,5 @@
 import { Scene } from 'phaser';
 import {Player} from "../Player";
-import {RemotePlayer} from "../RemotePlayer";
 
 export class Game extends Scene
 {
@@ -11,52 +10,24 @@ export class Game extends Scene
 
     create ()
     {
-        this.initSocketActions();
-
-        // // Example of receiving data
-        // this.socket.on('playerMoved', (coords) => {
-        //     // Handle the movement of other players
-        // });
-
-        // Additional game setup...
-
-        this.cameras.main.setBackgroundColor(0x00ff00);
-        const bg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
-        bg.setDisplaySize(this.scale.width, this.scale.height);
-
-        this.gameStarted = false;
+        this.initBackground();
 
         this.initMiddleWall();
 
         this.initGround();
 
-        this.initCurrentPlayer();
+        this.initFirstPlayer();
+
+        this.initSecondPlayer();
 
         this.initBall();
 
         // Handle ball and player collision
-        this.physics.add.collider(this.ball, this.player, (ball, player) => {
-            if (player.body.velocity.x > 0) {
-                ball.body.velocity.x *= 1.3;
-            }
+        this.physics.add.collider(this.ball, this.playerOne, () => this.handlePlayerBallCollision(this.ball, this.playerOne));
 
-            if (player.body.velocity.y > 0) {
-                ball.body.velocity.y *= 1.4;
-            }
-        });
+        this.physics.add.collider(this.ball, this.playerTwo, () => this.handlePlayerBallCollision(this.ball, this.playerTwo));
 
         this.physics.add.collider(this.ball, this.ground);
-
-        // Listen for ball state updates from the server
-        this.socket.on('updateBall', (ballState) => {
-            // Update ball position and velocity based on server update
-            this.ball.setPosition(ballState.x, ballState.y);
-            this.ball.setVelocity(ballState.vx, ballState.vy);
-        });
-
-        // this.input.once('pointerdown', () => {
-        //     // this.scene.start('GameOver');
-        // });
 
         // Standing still uses the first frame
         this.anims.create({
@@ -81,6 +52,12 @@ export class Game extends Scene
         });
     }
 
+    initBackground() {
+        this.cameras.main.setBackgroundColor(0x00ff00);
+        const bg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
+        bg.setDisplaySize(this.scale.width, this.scale.height);
+    }
+
     initBall() {
         // Create the ball
         this.ball = this.physics.add.sprite(400, 300, 'ballAnimation');
@@ -98,37 +75,7 @@ export class Game extends Scene
 
         // Enable damping and set the drag value
         this.ball.body.setDamping(true);
-        this.ball.body.setDrag(0.80); // A value close to 1 will slow down the ball very gradually
-    }
-
-    initSocketActions() {
-        this.socket = io('http://localhost:3031'); // Adjust the URL to your server
-        console.log(this.socket);
-
-        this.socket.on('playersConnected', (players) => {
-            console.log(players);
-            console.log(this.socket.id);
-
-            let currentPlayer = players.findIndex(player => player.id === this.socket.id);
-            console.log(players[currentPlayer]);
-
-            this.player.x = players[currentPlayer].x;
-            this.player.y = players[currentPlayer].y;
-
-            let remotePlayerIndex = (currentPlayer + 1) % 2;
-            this.remotePlayer = new RemotePlayer(this, players[remotePlayerIndex].x, players[remotePlayerIndex].y);
-
-            this.gameStarted = true;
-        });
-
-        this.socket.on('opponentMoved', (player) => {
-            this.remotePlayer.update({x: player.x, y: player.y});
-        })
-
-        this.socket.on('opponentLeft', () => {
-            console.log('Your opponent has left the game.');
-            // Handle the opponent leaving (e.g., end the game, show a message)
-        });
+        this.ball.body.setDrag(0.90); // A value close to 1 will slow down the ball very gradually
     }
 
     initMiddleWall() {
@@ -158,13 +105,36 @@ export class Game extends Scene
         this.ground.create(this.cameras.main.width / 2, this.cameras.main.height, 'groundTexture').setScale(100, 2).refreshBody();
     }
 
-    initCurrentPlayer() {
-        this.player = new Player(this, 100, this.cameras.main.height - 150); // Adjust starting position as needed
+    initFirstPlayer() {
+        this.playerOne = new Player(this, 100, this.cameras.main.height - 150, 'redPlayerSprite', 'wasd');
 
         // If you have a wall or platforms, make sure to add collision
         // For example, if you have a wall variable defined
-        this.physics.add.collider(this.player, this.wall);
-        this.physics.add.collider(this.player, this.ground);
+        this.physics.add.collider(this.playerOne, this.wall);
+        this.physics.add.collider(this.playerOne, this.ground);
+    }
+
+    initSecondPlayer() {
+        this.playerTwo = new Player(this, this.cameras.main.width - 100, this.cameras.main.height - 150, 'redPlayerSprite', 'arrows');
+
+        // If you have a wall or platforms, make sure to add collision
+        // For example, if you have a wall variable defined
+        this.physics.add.collider(this.playerTwo, this.wall);
+        this.physics.add.collider(this.playerTwo, this.ground);
+    }
+
+    handlePlayerBallCollision(player) {
+        if (this.ball.body.velocity.x < 50 && this.ball.body.velocity.x > -50) {
+            this.ball.body.velocity.x = 100;
+        }
+
+        if (player.body.velocity.x > 0) {
+            this.ball.body.velocity.x = Math.abs(this.ball.body.velocity.x) * 1.3;
+        } else if (player.body.velocity.x < 0) {
+            this.ball.body.velocity.x = -Math.abs(this.ball.body.velocity.x) * 1.3;
+        }
+
+        this.ball.body.velocity.y -= 200;
     }
 
     updateBallSpin() {
@@ -191,16 +161,9 @@ export class Game extends Scene
     }
 
     update(time, delta) {
-        let x = this.player.x;
-        let y = this.player.y;
-
-        // console.log(`${this.ball.body.velocity.x} - ${this.ball.body.velocity.y}`);
-
-        if (this.gameStarted) {
-            this.socket.emit('updatePosition', {x, y});
-        }
-
-        this.player.update();
+        console.log(this.ball.body.velocity.x);
+        this.playerOne.update();
+        this.playerTwo.update();
         this.updateBallSpin();
     }
 }

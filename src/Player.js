@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y) {
-        super(scene, x, y, 'redPlayerSprite'); // 'playerTexture' is a placeholder for your player's texture
+    constructor(scene, x, y, texture, controls = 'arrows') {
+        super(scene, x, y, texture);
         this.scene = scene;
 
         // Initialize the player's properties
@@ -10,14 +10,23 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.scene.add.existing(this);
 
         // Set player's properties
-        this.setCollideWorldBounds(true); // Prevent the player from moving out of the game's world
-        this.body.setSize(65, 110); // Set the size of the player's physics body if needed
+        this.setCollideWorldBounds(true);
+        this.body.setSize(65, 110);
 
         // Apply gravity to the player
-        this.setGravityY(1500); // Adjust the value to change the gravity strength
+        this.setGravityY(1500);
 
-        // Player's movement properties
-        this.cursors = this.scene.input.keyboard.createCursorKeys();
+        // Player's movement properties based on the controls parameter
+        if (controls === 'arrows') {
+            this.cursors = this.scene.input.keyboard.createCursorKeys();
+        } else if (controls === 'wasd') {
+            this.cursors = this.scene.input.keyboard.addKeys({
+                up: Phaser.Input.Keyboard.KeyCodes.W,
+                left: Phaser.Input.Keyboard.KeyCodes.A,
+                down: Phaser.Input.Keyboard.KeyCodes.S,
+                right: Phaser.Input.Keyboard.KeyCodes.D
+            });
+        }
     }
 
     update(args) {
