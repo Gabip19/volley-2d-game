@@ -10,9 +10,17 @@ export class Game extends Scene
 
     create ()
     {
+        this.initialPlayerX = 200;
+        this.initialPlayerY = this.cameras.main.height - 100;
+        this.initialBallX = this.game.config.width / 2;
+        this.initialBallY = 200;
+        this.maxScore = 5;
+
         this.initBackground();
 
         this.initMiddleWall();
+
+        this.initScore();
 
         this.initGround();
 
@@ -27,7 +35,9 @@ export class Game extends Scene
 
         this.physics.add.collider(this.ball, this.playerTwo, () => this.handlePlayerBallCollision(this.ball, this.playerTwo));
 
-        this.physics.add.collider(this.ball, this.ground);
+        this.physics.add.collider(this.ball, this.ground, () => this.handleBallGroundCollision());
+
+        this.physics.add.collider(this.ball, this.wall);
 
         // Standing still uses the first frame
         this.anims.create({
@@ -52,6 +62,19 @@ export class Game extends Scene
         });
     }
 
+    initScore() {
+        // Score variables
+        this.player1Score = 0;
+        this.player2Score = 0;
+
+        // Display the scores
+        this.scoreText = this.add.text(this.cameras.main.width / 2 - 70, 50, '0 - 0', {
+            fontFamily: 'Consolas',
+            fontSize: '50px',
+            fill: '#FFF'
+        });
+    }
+
     initBackground() {
         this.cameras.main.setBackgroundColor(0x00ff00);
         const bg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
@@ -60,7 +83,7 @@ export class Game extends Scene
 
     initBall() {
         // Create the ball
-        this.ball = this.physics.add.sprite(400, 300, 'ballAnimation');
+        this.ball = this.physics.add.sprite(this.initialBallX, this.initialBallY, 'ballAnimation');
 
         this.anims.create({
             key: 'spin',
@@ -106,19 +129,15 @@ export class Game extends Scene
     }
 
     initFirstPlayer() {
-        this.playerOne = new Player(this, 100, this.cameras.main.height - 150, 'redPlayerSprite', 'wasd');
+        this.playerOne = new Player(this, this.initialPlayerX, this.initialPlayerY, 'redPlayerSprite', 'wasd');
 
-        // If you have a wall or platforms, make sure to add collision
-        // For example, if you have a wall variable defined
         this.physics.add.collider(this.playerOne, this.wall);
         this.physics.add.collider(this.playerOne, this.ground);
     }
 
     initSecondPlayer() {
-        this.playerTwo = new Player(this, this.cameras.main.width - 100, this.cameras.main.height - 150, 'redPlayerSprite', 'arrows');
+        this.playerTwo = new Player(this, this.cameras.main.width - this.initialPlayerX, this.initialPlayerY, 'redPlayerSprite', 'arrows');
 
-        // If you have a wall or platforms, make sure to add collision
-        // For example, if you have a wall variable defined
         this.physics.add.collider(this.playerTwo, this.wall);
         this.physics.add.collider(this.playerTwo, this.ground);
     }
@@ -135,6 +154,43 @@ export class Game extends Scene
         }
 
         this.ball.body.velocity.y -= 200;
+    }
+
+    handleBallGroundCollision() {
+        if (this.ball.x < this.wall.x) {
+            // Ball is on the left side
+            this.player2Score++;
+        } else {
+            // Ball is on the right side
+            this.player1Score++;
+        }
+
+        // Check if either player has reached a score of 5
+        if (this.player1Score >= this.maxScore || this.player2Score >= this.maxScore) {
+            // Determine the winner
+            const winner = this.player1Score >= this.player2Score ? 'Player 1 Wins' : 'Player 2 Wins';
+
+            // Transition to the Game Over scene
+            this.scene.start('GameOver', { winner });
+        }
+
+        this.scoreText.setText(`${this.player1Score} - ${this.player2Score}`);
+
+        // Reset ball and players
+        this.resetGame();
+    }
+
+    resetGame() {
+        this.playerOne.x = this.initialPlayerX;
+        this.playerOne.y = this.initialPlayerY;
+
+        this.playerTwo.x = this.cameras.main.width - this.initialPlayerX;
+        this.playerTwo.y = this.initialPlayerY;
+
+        this.ball.x = this.initialBallX;
+        this.ball.y = this.initialBallY;
+        this.ball.setVelocityX(0);
+        this.ball.setVelocityY(0);
     }
 
     updateBallSpin() {
@@ -161,7 +217,8 @@ export class Game extends Scene
     }
 
     update(time, delta) {
-        console.log(this.ball.body.velocity.x);
+        // console.log(this.ball.body.velocity.x);
+
         this.playerOne.update();
         this.playerTwo.update();
         this.updateBallSpin();
