@@ -38,6 +38,10 @@ export class Preloader extends Scene
             frameWidth: 32,
             frameHeight: 32,
         });
+        this.load.spritesheet('redPlayerSprite', 'red-sprite.png', {
+            frameWidth: 65,
+            frameHeight: 110,
+        });
     }
 
     create ()
@@ -48,10 +52,10 @@ export class Preloader extends Scene
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
 
         // Create a Graphics object
-        let graphics = this.make.graphics({ x: 0, y: 0, add: false });
-        graphics.fillStyle(0xffffff, 1); // Set fill color to white
-        graphics.fillRect(0, 0, 60, 110); // Draw a 50x50 square
-        graphics.generateTexture('playerTexture', 60, 110); // Generate a texture named 'playerTexture'
+        // let graphics = this.make.graphics({ x: 0, y: 0, add: false });
+        // graphics.fillStyle(0xffffff, 1); // Set fill color to white
+        // graphics.fillRect(0, 0, 65, 110); // Draw a 50x50 square
+        // graphics.generateTexture('playerTexture', 65, 110); // Generate a texture named 'playerTexture'
 
         this.scene.start('MainMenu');
     }

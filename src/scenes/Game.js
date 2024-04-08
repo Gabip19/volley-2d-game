@@ -21,7 +21,8 @@ export class Game extends Scene
         // Additional game setup...
 
         this.cameras.main.setBackgroundColor(0x00ff00);
-        this.add.image(512, 384, 'game-bg');
+        const bg = this.add.image(0, 0, 'game-bg').setOrigin(0, 0);
+        bg.setDisplaySize(this.scale.width, this.scale.height);
 
         this.gameStarted = false;
 
@@ -56,6 +57,28 @@ export class Game extends Scene
         // this.input.once('pointerdown', () => {
         //     // this.scene.start('GameOver');
         // });
+
+        // Standing still uses the first frame
+        this.anims.create({
+            key: 'stand',
+            frames: [{ key: 'redPlayerSprite', frame: 0 }],
+            frameRate: 20,
+        });
+
+        // Running loops frames 2 and 3
+        this.anims.create({
+            key: 'run',
+            frames: this.anims.generateFrameNumbers('redPlayerSprite', { start: 1, end: 2 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // Jumping uses the 4th frame
+        this.anims.create({
+            key: 'jump',
+            frames: [{ key: 'redPlayerSprite', frame: 3 }],
+            frameRate: 20,
+        });
     }
 
     initBall() {

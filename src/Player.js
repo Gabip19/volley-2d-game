@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        super(scene, x, y, 'playerTexture'); // 'playerTexture' is a placeholder for your player's texture
+        super(scene, x, y, 'redPlayerSprite'); // 'playerTexture' is a placeholder for your player's texture
         this.scene = scene;
 
         // Initialize the player's properties
@@ -11,7 +11,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Set player's properties
         this.setCollideWorldBounds(true); // Prevent the player from moving out of the game's world
-        this.body.setSize(60, 110); // Set the size of the player's physics body if needed
+        this.body.setSize(65, 110); // Set the size of the player's physics body if needed
 
         // Apply gravity to the player
         this.setGravityY(1500); // Adjust the value to change the gravity strength
@@ -26,8 +26,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Left and right movement
         if (this.cursors.left.isDown) {
             this.body.setVelocityX(-450);
+            this.anims.play('run', true);
         } else if (this.cursors.right.isDown) {
             this.body.setVelocityX(450);
+            this.anims.play('run', true);
         } else {
             // Apply deceleration when no keys are pressed
             if (this.body.velocity.x > 0) { // Moving right
@@ -35,6 +37,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             } else if (this.body.velocity.x < 0) { // Moving left
                 this.body.setVelocityX(Math.min(this.body.velocity.x + deceleration, 0));
             }
+
+            this.anims.play('stand', true);
+        }
+
+        if (!this.body.touching.down) {
+            this.anims.play("jump", true);
         }
 
         // Jumping
