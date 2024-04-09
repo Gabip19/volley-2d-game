@@ -30,34 +30,52 @@ export class Game extends Scene
 
         this.initBall();
 
-        // Handle ball and player collision
-        this.physics.add.collider(this.ball, this.playerOne, () => this.handlePlayerBallCollision(this.ball, this.playerOne));
+        this.initCollisions();
 
-        this.physics.add.collider(this.ball, this.playerTwo, () => this.handlePlayerBallCollision(this.ball, this.playerTwo));
+        this.initAnimations();
+    }
 
-        this.physics.add.collider(this.ball, this.ground, () => this.handleBallGroundCollision());
-
-        this.physics.add.collider(this.ball, this.wall);
-
+    initAnimations() {
         // Standing still uses the first frame
         this.anims.create({
-            key: 'stand',
-            frames: [{ key: 'redPlayerSprite', frame: 0 }],
+            key: 'redStand',
+            frames: [{key: 'redPlayerSprite', frame: 0}],
             frameRate: 20,
         });
 
         // Running loops frames 2 and 3
         this.anims.create({
-            key: 'run',
-            frames: this.anims.generateFrameNumbers('redPlayerSprite', { start: 1, end: 2 }),
+            key: 'redRun',
+            frames: this.anims.generateFrameNumbers('redPlayerSprite', {start: 1, end: 2}),
             frameRate: 10,
             repeat: -1
         });
 
         // Jumping uses the 4th frame
         this.anims.create({
-            key: 'jump',
-            frames: [{ key: 'redPlayerSprite', frame: 3 }],
+            key: 'redJump',
+            frames: [{key: 'redPlayerSprite', frame: 3}],
+            frameRate: 20,
+        });
+
+        this.anims.create({
+            key: 'blueStand',
+            frames: [{key: 'bluePlayerSprite', frame: 0}],
+            frameRate: 20,
+        });
+
+        // Running loops frames 2 and 3
+        this.anims.create({
+            key: 'blueRun',
+            frames: this.anims.generateFrameNumbers('bluePlayerSprite', {start: 1, end: 2}),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // Jumping uses the 4th frame
+        this.anims.create({
+            key: 'blueJump',
+            frames: [{key: 'bluePlayerSprite', frame: 3}],
             frameRate: 20,
         });
     }
@@ -105,27 +123,29 @@ export class Game extends Scene
         const wallWidth = 20; // The thickness of the wall
         const wallHeight = 220; // The height of the wall, adjust as needed
         const centerX = this.cameras.main.width / 2; // Center of the screen on the X axis
+
         // Calculate the Y position so the bottom of the wall is at the bottom of the scene
         const bottomY = this.cameras.main.height; // Bottom of the screen on the Y axis
         const startY = bottomY - wallHeight / 2; // Y position for the wall to start from the bottom up
 
         // Add a static physics sprite for the wall
         // Note: 'invisible' is a placeholder; ideally, you have a transparent 1x1 px image loaded for such purposes
-        this.wall = this.physics.add.staticSprite(centerX, startY, 'invisible');
+        this.wall = this.physics.add.staticSprite(centerX, startY, 'pole');
         this.wall.displayWidth = wallWidth;
         this.wall.displayHeight = wallHeight;
         this.wall.refreshBody(); // Refresh the physics body to match the display size
-
-        // Optionally, if you want to visually debug the wall's position without an actual image
-        let graphics = this.add.graphics();
-        graphics.lineStyle(2, 0xff0000, 1.0); // Red outline for visibility
-        graphics.strokeRect(centerX - wallWidth / 2, startY - wallHeight / 2, wallWidth, wallHeight);
     }
 
     initGround() {
         // Create a ground object
         this.ground = this.physics.add.staticGroup();
-        this.ground.create(this.cameras.main.width / 2, this.cameras.main.height, 'groundTexture').setScale(100, 2).refreshBody();
+        this.ground.create(this.cameras.main.width / 2, this.cameras.main.height, 'groundTexture')
+            .setScale(100, 2).refreshBody().setVisible(false);
+
+        // // Draw a colored rectangle to represent the ground visually
+        let graphics = this.add.graphics();
+        graphics.fillStyle(0xffe5b2, 1);
+        graphics.fillRect(0, this.cameras.main.height - 31, this.cameras.main.width, 31);
     }
 
     initFirstPlayer() {
@@ -136,10 +156,21 @@ export class Game extends Scene
     }
 
     initSecondPlayer() {
-        this.playerTwo = new Player(this, this.cameras.main.width - this.initialPlayerX, this.initialPlayerY, 'redPlayerSprite', 'arrows');
+        this.playerTwo = new Player(this, this.cameras.main.width - this.initialPlayerX, this.initialPlayerY, 'bluePlayerSprite', 'arrows');
 
         this.physics.add.collider(this.playerTwo, this.wall);
         this.physics.add.collider(this.playerTwo, this.ground);
+    }
+
+    initCollisions() {
+        // Handle ball and player collision
+        this.physics.add.collider(this.ball, this.playerOne, () => this.handlePlayerBallCollision(this.ball, this.playerOne));
+
+        this.physics.add.collider(this.ball, this.playerTwo, () => this.handlePlayerBallCollision(this.ball, this.playerTwo));
+
+        this.physics.add.collider(this.ball, this.ground, () => this.handleBallGroundCollision());
+
+        this.physics.add.collider(this.ball, this.wall);
     }
 
     handlePlayerBallCollision(player) {

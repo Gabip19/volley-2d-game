@@ -32,7 +32,6 @@ export class Preloader extends Scene
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
 
-        this.load.image('logo', 'logo.png');
         this.load.image('game-bg', 'background.jpg');// Creates a 50x50 white square
         this.load.spritesheet('ballAnimation', 'ball.png', {
             frameWidth: 32,
@@ -42,6 +41,11 @@ export class Preloader extends Scene
             frameWidth: 65,
             frameHeight: 110,
         });
+        this.load.spritesheet('bluePlayerSprite', 'blue-sprite.png', {
+            frameWidth: 65,
+            frameHeight: 110,
+        });
+        this.load.image('pole', 'polepng.png');
     }
 
     create ()

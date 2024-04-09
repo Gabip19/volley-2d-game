@@ -5,6 +5,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, texture);
         this.scene = scene;
 
+        this.animationPrefix = texture.startsWith('red') ? 'red' : texture.startsWith('blue') ? 'blue' : '';
+
         // Initialize the player's properties
         this.scene.physics.world.enable(this);
         this.scene.add.existing(this);
@@ -35,10 +37,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Left and right movement
         if (this.cursors.left.isDown) {
             this.body.setVelocityX(-450);
-            this.anims.play('run', true);
+            this.anims.play(`${this.animationPrefix}Run`, true);
         } else if (this.cursors.right.isDown) {
             this.body.setVelocityX(450);
-            this.anims.play('run', true);
+            this.anims.play(`${this.animationPrefix}Run`, true);
         } else {
             // Apply deceleration when no keys are pressed
             if (this.body.velocity.x > 0) { // Moving right
@@ -47,11 +49,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.body.setVelocityX(Math.min(this.body.velocity.x + deceleration, 0));
             }
 
-            this.anims.play('stand', true);
+            this.anims.play(`${this.animationPrefix}Stand`, true);
         }
 
         if (!this.body.touching.down) {
-            this.anims.play("jump", true);
+            this.anims.play(`${this.animationPrefix}Jump`, true);
         }
 
         // Jumping
